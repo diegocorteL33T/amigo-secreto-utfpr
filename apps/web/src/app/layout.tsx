@@ -15,10 +15,13 @@ const funnelSans = Funnel_Sans({
 });
 
 // Endereço público, usado para montar a URL da imagem de prévia (Open Graph).
-// Na Vercel, a variável abaixo é preenchida no build.
-const urlDoSite = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : "http://localhost:3000";
+// SITE_URL vem da pipeline: o build feito fora da Vercel não recebe
+// VERCEL_PROJECT_PRODUCTION_URL, que só existe nos builds e nas funções de lá.
+const urlDoSite =
+  process.env.SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
 
 const descricao =
   "Sorteie o amigo secreto do seu grupo e mande para cada pessoa um link que revela só quem ela tirou.";
