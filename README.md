@@ -4,7 +4,7 @@ Sorteador de amigo secreto feito para o trabalho **Operação Deploy**, da disci
 
 Quem organiza cria o grupo, o app faz o sorteio e gera um link para cada participante. Cada link mostra só quem aquela pessoa tirou. Não há banco de dados: o resultado vai criptografado dentro do próprio link.
 
-**Site publicado:** _o link entra aqui depois do primeiro deploy na `main`._
+**Site publicado:** https://amigo-secreto-utfpr.vercel.app (API em https://amigo-secreto-utfpr-api.vercel.app/health)
 
 ## O problema
 
