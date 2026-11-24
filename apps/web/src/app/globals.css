@@ -1,0 +1,519 @@
+@import "tailwindcss";
+
+/*
+ * Valores do DESIGN.md (direção A "Papel e rosa").
+ * A tela de criar usa o tema claro; a de revelação liga o tema "noite"
+ * com um elemento [data-tema="noite"] na página.
+ */
+:root {
+  --bg: #f6f0eb;
+  --surface: #ebe0d9;
+  --card: #fbf8f5;
+  --ink: #2c2325;
+  --muted: #6a5d5e;
+  --accent: #9a3c4c;
+  --accent-hover: #843744;
+  --accent-ink: #ffffff;
+  --line: #e0d9d5;
+  --line-strong: #cec7c3;
+  --line-field: #898383;
+  --success: #2f6b45;
+  --success-bg: #e3eee6;
+  --danger: #8f1d2c;
+  --danger-bg: #f6dcdc;
+  --rose: #9a3c4c;
+
+  --primary: var(--accent);
+  --primary-ink: var(--accent-ink);
+  --primary-hover: var(--accent-hover);
+  --secondary-hover: #e2d4cc;
+  --focus: var(--accent);
+  --selection-bg: #eaa7b2;
+  --selection-ink: #2c2325;
+  --lh-corpo: 1.5;
+
+  --caixa: #9a3c4c;
+  --caixa-escura: #843744;
+  --fita: #f6f0eb;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  color-scheme: light;
+}
+
+:root:has([data-tema="noite"]),
+[data-tema="noite"] {
+  --bg: #2c2325;
+  --surface: #382f31;
+  --card: #382f31;
+  --ink: #f6f0eb;
+  --muted: #a39b99;
+  --line: #7b7372;
+  --line-strong: #7b7372;
+  --line-field: #7b7372;
+  --rose: #eaa7b2;
+
+  --primary: #f6f0eb;
+  --primary-ink: #2c2325;
+  --primary-hover: #ffffff;
+  --secondary-hover: #443a3c;
+  --focus: #f6f0eb;
+  --selection-bg: #f6f0eb;
+  --selection-ink: #2c2325;
+  --lh-corpo: 1.55;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-line: var(--line);
+  --color-line-field: var(--line-field);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-rose: var(--rose);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --font-display: var(--font-funnel-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-funnel-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+/* ---------- Base e superfícies do navegador ---------- */
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--ink);
+    accent-color: var(--accent);
+    caret-color: var(--accent);
+    scrollbar-color: var(--line-strong) transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: var(--lh-corpo);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--selection-bg);
+    color: var(--selection-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+}
+
+/* ---------- Tipografia (tabela do DESIGN.md) ---------- */
+@layer components {
+  .t-display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(3rem, 2rem + 4.5vw, 5.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .t-h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.5rem, 1.9rem + 2.6vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .t-h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2rem, 1.75rem + 1vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .t-h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.5rem;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .t-marca {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .t-destaque {
+    font-size: 1.25rem;
+    line-height: 1.45;
+  }
+
+  .t-corpo {
+    font-size: 1rem;
+    line-height: var(--lh-corpo);
+  }
+
+  .t-pequeno {
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  /* ---------- Botões e campos ---------- */
+  .botao-principal,
+  .botao-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+    transition:
+      transform 140ms var(--ease-out),
+      background-color 150ms ease,
+      color 150ms ease;
+  }
+
+  .botao-principal {
+    height: 52px;
+    padding-inline: 1.5rem;
+    background: var(--primary);
+    color: var(--primary-ink);
+  }
+
+  .botao-secundario {
+    height: 44px;
+    padding-inline: 1.25rem;
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .botao-texto {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, var(--ink) 45%, transparent);
+    transition:
+      color 150ms ease,
+      transform 140ms var(--ease-out);
+  }
+
+  /* Botão só com ícone (pausar animações): 44px, redondo, sem fundo. */
+  .botao-icone {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--ink);
+    transition:
+      background-color 150ms ease,
+      transform 140ms var(--ease-out);
+  }
+
+  .botao-principal:active:not(:disabled),
+  .botao-secundario:active:not(:disabled),
+  .botao-texto:active,
+  .botao-icone:active {
+    transform: scale(0.97);
+  }
+
+  .botao-principal:disabled,
+  .botao-secundario:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .campo {
+    height: 48px;
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--line-field);
+    background: var(--card);
+    padding-inline: 1rem;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+
+  .campo::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
+
+  .campo:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  select.campo {
+    appearance: none;
+    padding-right: 2.75rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .botao-principal:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .botao-secundario:hover:not(:disabled) {
+      background: var(--secondary-hover);
+    }
+
+    .botao-texto:hover {
+      color: var(--rose);
+    }
+
+    .botao-icone:hover {
+      background: var(--secondary-hover);
+    }
+  }
+}
+
+/* ---------- Movimento ---------- */
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes surgir-nome {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(6px);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+.entrar {
+  animation: entrar 320ms var(--ease-out) both;
+  animation-delay: var(--atraso, 0ms);
+}
+
+.linha-resultado {
+  animation: entrar 260ms var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 50ms);
+}
+
+.surgir-nome {
+  animation: surgir-nome 400ms var(--ease-out) 350ms both;
+}
+
+.saindo {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+}
+
+/* Troca de rótulo ("Copiar link" -> "Copiado") com desfoque leve. */
+.troca {
+  display: inline-grid;
+}
+
+.troca > * {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition:
+    opacity 200ms ease,
+    filter 200ms ease;
+}
+
+.troca > [data-oculto="true"] {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+/* ---------- Palco da caixa 3D e caixa em CSS (sem WebGL) ---------- */
+.palco canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.palco[data-pronta="true"] canvas {
+  opacity: 1;
+}
+
+.palco[data-pronta="true"] .caixa-css {
+  opacity: 0;
+}
+
+.fundo-flocos canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 800ms var(--ease-out);
+}
+
+.fundo-flocos[data-pronto="true"] canvas {
+  opacity: 1;
+}
+
+.caixa-css {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.caixa-css__base {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: 14%;
+  height: 38%;
+  border-radius: 6%;
+  background: var(--caixa);
+}
+
+.caixa-css__tampa {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 51%;
+  height: 12%;
+  border-radius: 6% / 24%;
+  background: var(--caixa-escura);
+  transform-origin: 70% 100%;
+  transition: transform 600ms cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.caixa-css__base::before,
+.caixa-css__tampa::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 14%;
+  translate: -50% 0;
+  background: var(--fita);
+}
+
+.caixa-css__laco {
+  position: absolute;
+  left: 50%;
+  bottom: 92%;
+  width: 46%;
+  aspect-ratio: 2 / 1;
+  translate: -50% 0;
+}
+
+.caixa-css__laco::before,
+.caixa-css__laco::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 50%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--fita);
+  box-shadow: inset 0 0 0 2px var(--caixa-escura);
+}
+
+.caixa-css__laco::before {
+  left: 0;
+  rotate: -18deg;
+  transform-origin: 100% 100%;
+}
+
+.caixa-css__laco::after {
+  right: 0;
+  rotate: 18deg;
+  transform-origin: 0 100%;
+}
+
+.caixa-css[data-aberta="true"] .caixa-css__tampa {
+  transform: translate(8%, -150%) rotate(-10deg);
+}
+
+/* ---------- Menos movimento: só opacidade ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .entrar,
+  .linha-resultado {
+    animation-name: aparecer;
+    animation-duration: 200ms;
+  }
+
+  .surgir-nome {
+    animation: aparecer 200ms ease both;
+  }
+
+  .botao-principal:active:not(:disabled),
+  .botao-secundario:active:not(:disabled),
+  .botao-texto:active,
+  .botao-icone:active {
+    transform: none;
+  }
+
+  .troca > * {
+    transition: opacity 200ms ease;
+  }
+
+  .troca > [data-oculto="true"] {
+    filter: none;
+  }
+
+  .caixa-css__tampa {
+    transition: none;
+  }
+}

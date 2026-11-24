@@ -1,0 +1,197 @@
+# Pipeline do Amigo Secreto.
+#
+# Ordem: qualidade -> testes -> build -> deploy da API -> deploy do site.
+# Cada job só começa se o anterior passou. Se um falha, os seguintes ficam
+# como "skipped" e nada é publicado. Em cada deploy, a pipeline guarda o
+# pacote publicado como artefato da execução e, depois de publicar, acessa o
+# endereço de produção e falha se ele não responder.
+#
+# O deploy só roda na main (push ou execução manual). Nos PRs e na develop,
+# a pipeline valida o código, mas não publica.
+#
+# Segredos usados (Settings > Secrets and variables > Actions):
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_API, VERCEL_PROJECT_ID_WEB
+# As variáveis da aplicação (SORTEIO_SECRET na API, API_URL no site) ficam
+# na Vercel e são baixadas pelo "vercel pull".
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Na main, um deploy em andamento nunca é cancelado no meio.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  NODE_VERSION: 24
+  VERCEL_CLI_VERSION: 65.12.1
+  # Endereços de produção (públicos). O endereço único de cada deploy pede
+  # login na Vercel, por isso a pipeline confere e mostra estes.
+  URL_API: https://amigo-secreto-utfpr-api.vercel.app
+  URL_SITE: https://amigo-secreto-utfpr.vercel.app
+
+jobs:
+  qualidade:
+    name: Qualidade (lint e typecheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+
+  testes:
+    name: Testes (unitários e e2e)
+    needs: qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Testes unitários
+        run: npm test
+      - name: Testes e2e da API
+        run: npm run test:e2e
+
+  build:
+    name: Build
+    needs: testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Build da API e do site
+        run: npm run build
+
+  deploy-api:
+    name: Deploy da API
+    needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: api-producao
+      url: ${{ env.URL_API }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_API }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Instalar a CLI da Vercel
+        run: npm install --global "vercel@${VERCEL_CLI_VERSION}"
+      - name: Baixar a configuração de produção
+        run: vercel pull --yes --environment=production
+      - name: Build de produção
+        run: vercel build --prod
+      - name: Conferir o artefato
+        # O artefato fica disponível para download num repositório público,
+        # então nenhum arquivo .env pode ir junto.
+        run: |
+          test -z "$(find .vercel/output -name '.env*' ! -name '.env.example')"
+      - name: Guardar o artefato
+        # O mesmo pacote que o "vercel deploy --prebuilt" envia, com o commit no nome.
+        id: artefato
+        uses: actions/upload-artifact@v7
+        with:
+          name: artefato-api-${{ github.sha }}
+          path: .vercel/output
+          include-hidden-files: true
+          if-no-files-found: error
+      - name: Publicar
+        id: publicar
+        env:
+          URL_ARTEFATO: ${{ steps.artefato.outputs.artifact-url }}
+        run: |
+          url="$(vercel deploy --prebuilt --prod)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Artefato da API: $URL_ARTEFATO" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy da API: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Conferir a API publicada
+        run: |
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_API/health" | grep -q '"status":"ok"'
+          echo "API no ar: $URL_API/health" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-web:
+    name: Deploy do site
+    needs: deploy-api
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: web-producao
+      url: ${{ env.URL_SITE }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Instalar a CLI da Vercel
+        run: npm install --global "vercel@${VERCEL_CLI_VERSION}"
+      - name: Baixar a configuração de produção
+        run: vercel pull --yes --environment=production
+      - name: Build de produção
+        run: vercel build --prod
+      - name: Conferir o artefato
+        run: |
+          test -z "$(find .vercel/output -name '.env*' ! -name '.env.example')"
+      - name: Guardar o artefato
+        id: artefato
+        uses: actions/upload-artifact@v7
+        with:
+          name: artefato-site-${{ github.sha }}
+          path: .vercel/output
+          include-hidden-files: true
+          if-no-files-found: error
+      - name: Publicar
+        id: publicar
+        env:
+          URL_ARTEFATO: ${{ steps.artefato.outputs.artifact-url }}
+        run: |
+          url="$(vercel deploy --prebuilt --prod)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Artefato do site: $URL_ARTEFATO" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy do site: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Conferir o site publicado
+        run: |
+          # A página inicial abre e o site alcança a API pelo /api.
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/" | grep -q "Amigo Secreto"
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/api/health" | grep -q '"status":"ok"'
+          echo "Site no ar: $URL_SITE" >> "$GITHUB_STEP_SUMMARY"
