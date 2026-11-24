@@ -6,6 +6,8 @@ Quem organiza cria o grupo, o app faz o sorteio e gera um link para cada partici
 
 **Site publicado:** https://amigo-secreto-utfpr.vercel.app (API em https://amigo-secreto-utfpr-api.vercel.app/health)
 
+<img width="1440" height="900" alt="r1-revelar-1440-fechado" src="https://github.com/user-attachments/assets/23c35425-e314-442d-9b83-8fc5faf535c4" />
+
 ## O problema
 
 No sorteio com papeizinhos, todo mundo precisa estar no mesmo lugar, alguém pode tirar o próprio nome e é difícil respeitar regras como "casais não se tiram". Quando o grupo está espalhado, alguém acaba sorteando por todos e fica sabendo do resultado.
