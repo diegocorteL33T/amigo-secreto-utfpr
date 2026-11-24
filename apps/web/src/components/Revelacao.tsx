@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { buscarRevelacao, ErroDaApi, type Revelacao as Dados } from "@/lib/api";
 import { formatarData } from "@/lib/textos";
+import { CaixaPresente } from "./CaixaPresente";
+
+/** Acima disso, o nome usa o tamanho do H1 para caber na tela. */
+const NOME_LONGO = 18;
 
 type Estado =
   | { tipo: "carregando" }
@@ -13,6 +17,7 @@ type Estado =
 export function Revelacao({ token }: { token: string }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "carregando" });
   const [revelado, setRevelado] = useState(false);
+  const nomeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -34,83 +39,97 @@ export function Revelacao({ token }: { token: string }) {
     };
   }, [token]);
 
-  if (estado.tipo === "carregando") {
-    return (
-      <p className="text-muted" role="status">
-        Abrindo seu link...
-      </p>
-    );
-  }
+  // O botão some ao abrir: o foco vai para o nome, para quem usa teclado ou leitor de tela.
+  useEffect(() => {
+    if (revelado) nomeRef.current?.focus({ preventScroll: true });
+  }, [revelado]);
 
+  const dados = estado.tipo === "pronto" ? estado.dados : null;
+  const revelar = () => setRevelado(true);
+
+  let titulo: string;
+  let texto: ReactNode = null;
   if (estado.tipo === "erro") {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Não deu para abrir o link</h1>
-        <p
-          className="rounded-lg bg-accent-soft px-4 py-3 text-accent"
-          role="alert"
-        >
-          {estado.mensagem}
-        </p>
-        <Link href="/" className="text-sm font-medium underline">
-          Criar um novo sorteio
-        </Link>
-      </div>
+    titulo = "Este link não abre";
+    texto = estado.mensagem;
+  } else if (dados) {
+    titulo = `Olá, ${dados.participante}`;
+    texto = (
+      <>
+        Amigo secreto do grupo{" "}
+        <span className="font-medium text-rose">{dados.grupo}</span>. Este link
+        é só seu: abra quando ninguém estiver olhando.
+      </>
     );
+  } else {
+    titulo = "Seu amigo secreto";
   }
-
-  const { grupo, participante, amigoSecreto, valorSugerido, dataEvento } =
-    estado.dados;
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <p className="text-sm font-medium uppercase tracking-widest text-accent">
-          {grupo}
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Olá, {participante}!
-        </h1>
-        <p className="text-muted">
-          Este link é só seu. Quando estiver num lugar sem ninguém olhando,
-          revele seu amigo secreto.
-        </p>
-      </header>
+    <div className="flex flex-1 flex-col items-center text-center">
+      <h1 className="t-h2 entrar w-full [overflow-wrap:anywhere]">{titulo}</h1>
+      {texto && (
+        <p className="entrar mt-3 max-w-[40ch] [--atraso:70ms]">{texto}</p>
+      )}
 
-      <div className="grid min-h-44 place-items-center rounded-2xl border border-border bg-card p-6 text-center">
-        {revelado ? (
-          <div className="animar-revelacao flex flex-col gap-2">
-            <span className="text-sm text-muted">Você tirou</span>
-            <strong className="text-4xl font-semibold tracking-tight text-accent sm:text-5xl">
-              {amigoSecreto}
-            </strong>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setRevelado(true)}
-            className="rounded-xl bg-accent px-6 py-3.5 text-base font-semibold text-accent-foreground transition hover:bg-accent-hover"
+      <CaixaPresente
+        modo="revelacao"
+        aberta={revelado}
+        parada={estado.tipo === "erro"}
+        aoTocar={dados && !revelado ? revelar : undefined}
+        className="my-6 h-[45dvh] max-h-[26rem] min-h-64 w-full"
+      />
+
+      {estado.tipo === "erro" ? (
+        <Link href="/" className="botao-texto">
+          Criar um novo sorteio
+        </Link>
+      ) : !revelado || !dados ? (
+        <button
+          type="button"
+          onClick={revelar}
+          disabled={!dados}
+          aria-busy={!dados}
+          className="botao-principal w-full max-w-80"
+        >
+          {dados ? "Abrir o presente" : "Preparando seu presente…"}
+        </button>
+      ) : (
+        <>
+          <div
+            ref={nomeRef}
+            tabIndex={-1}
+            className="surgir-nome flex w-full flex-col items-center gap-2 outline-none"
           >
-            Revelar meu amigo secreto
-          </button>
-        )}
-      </div>
+            <p className="t-pequeno font-medium text-rose">Você tirou</p>
+            <p
+              className={`${dados.amigoSecreto.length > NOME_LONGO ? "t-h1" : "t-display"} w-full [overflow-wrap:anywhere]`}
+            >
+              {dados.amigoSecreto}
+            </p>
+          </div>
 
-      {(valorSugerido || dataEvento) && (
-        <dl className="grid gap-4 sm:grid-cols-2">
-          {valorSugerido && (
-            <div className="rounded-xl border border-border bg-card px-4 py-3">
-              <dt className="text-sm text-muted">Valor sugerido</dt>
-              <dd className="font-medium">{valorSugerido}</dd>
-            </div>
+          {(dados.valorSugerido || dados.dataEvento) && (
+            <dl
+              className={`entrar mt-8 grid w-full divide-x divide-line rounded-sm bg-surface text-left [--atraso:700ms] ${dados.valorSugerido && dados.dataEvento ? "grid-cols-2" : "grid-cols-1"}`}
+            >
+              {dados.valorSugerido && (
+                <div className="flex flex-col gap-1 px-4 py-3">
+                  <dt className="t-pequeno text-muted">Valor sugerido</dt>
+                  <dd className="font-medium">{dados.valorSugerido}</dd>
+                </div>
+              )}
+              {dados.dataEvento && (
+                <div className="flex flex-col gap-1 px-4 py-3">
+                  <dt className="t-pequeno text-muted">Troca de presentes</dt>
+                  <dd className="font-medium">
+                    {formatarData(dados.dataEvento)}
+                  </dd>
+                </div>
+              )}
+            </dl>
           )}
-          {dataEvento && (
-            <div className="rounded-xl border border-border bg-card px-4 py-3">
-              <dt className="text-sm text-muted">Troca de presentes</dt>
-              <dd className="font-medium">{formatarData(dataEvento)}</dd>
-            </div>
-          )}
-        </dl>
+        </>
       )}
     </div>
   );
