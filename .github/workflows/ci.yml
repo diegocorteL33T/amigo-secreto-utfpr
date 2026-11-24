@@ -2,7 +2,8 @@
 #
 # Ordem: qualidade -> testes -> build -> deploy da API -> deploy do site.
 # Cada job só começa se o anterior passou. Se um falha, os seguintes ficam
-# como "skipped" e nada é publicado.
+# como "skipped" e nada é publicado. Depois de cada deploy, a pipeline acessa
+# o endereço de produção e falha se ele não responder.
 #
 # O deploy só roda na main (push ou execução manual). Nos PRs e na develop,
 # a pipeline valida o código, mas não publica.
@@ -32,6 +33,10 @@ concurrency:
 env:
   NODE_VERSION: 24
   VERCEL_CLI_VERSION: 65.12.1
+  # Endereços de produção (públicos). O endereço único de cada deploy pede
+  # login na Vercel, por isso a pipeline confere e mostra estes.
+  URL_API: https://amigo-secreto-utfpr-api.vercel.app
+  URL_SITE: https://amigo-secreto-utfpr.vercel.app
 
 jobs:
   qualidade:
@@ -93,7 +98,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: api-producao
-      url: ${{ steps.publicar.outputs.url }}
+      url: ${{ env.URL_API }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -115,7 +120,11 @@ jobs:
         run: |
           url="$(vercel deploy --prebuilt --prod)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "API publicada: $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy da API: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Conferir a API publicada
+        run: |
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_API/health" | grep -q '"status":"ok"'
+          echo "API no ar: $URL_API/health" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-web:
     name: Deploy do site
@@ -125,7 +134,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: web-producao
-      url: ${{ steps.publicar.outputs.url }}
+      url: ${{ env.URL_SITE }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -147,4 +156,10 @@ jobs:
         run: |
           url="$(vercel deploy --prebuilt --prod)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Site publicado: $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy do site: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Conferir o site publicado
+        run: |
+          # A página inicial abre e o site alcança a API pelo /api.
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/" | grep -q "Amigo Secreto"
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/api/health" | grep -q '"status":"ok"'
+          echo "Site no ar: $URL_SITE" >> "$GITHUB_STEP_SUMMARY"

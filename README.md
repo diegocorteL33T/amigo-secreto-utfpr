@@ -105,7 +105,7 @@ O arquivo `.github/workflows/ci.yml` roda a cada push e pull request para `main`
 1. **Qualidade:** `npm run lint` e `npm run typecheck`.
 2. **Testes:** `npm test` e `npm run test:e2e`.
 3. **Build:** `npm run build`.
-4. **Deploy da API**, depois **deploy do site**, na Vercel.
+4. **Deploy da API**, depois **deploy do site**, na Vercel. Depois de cada deploy, a pipeline acessa o endereço de produção: na API, `/health`; no site, a página inicial e o `/api/health`, que passa pelo site até a API. Se algum não responder, a execução falha.
 
 Cada job só começa se o anterior passou. Se um falha, os seguintes ficam como *skipped* e nada é publicado. O deploy só roda na `main` (push ou execução manual) e é feito pela CLI da Vercel (`vercel pull`, `vercel build` e `vercel deploy --prebuilt --prod`). O deploy automático da Vercel está desligado nos `vercel.json`, então só a pipeline publica.
 
