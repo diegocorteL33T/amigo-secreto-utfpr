@@ -2,8 +2,9 @@
 #
 # Ordem: qualidade -> testes -> build -> deploy da API -> deploy do site.
 # Cada job só começa se o anterior passou. Se um falha, os seguintes ficam
-# como "skipped" e nada é publicado. Depois de cada deploy, a pipeline acessa
-# o endereço de produção e falha se ele não responder.
+# como "skipped" e nada é publicado. Em cada deploy, a pipeline guarda o
+# pacote publicado como artefato da execução e, depois de publicar, acessa o
+# endereço de produção e falha se ele não responder.
 #
 # O deploy só roda na main (push ou execução manual). Nos PRs e na develop,
 # a pipeline valida o código, mas não publica.
@@ -115,11 +116,28 @@ jobs:
         run: vercel pull --yes --environment=production
       - name: Build de produção
         run: vercel build --prod
+      - name: Conferir o artefato
+        # O artefato fica disponível para download num repositório público,
+        # então nenhum arquivo .env pode ir junto.
+        run: |
+          test -z "$(find .vercel/output -name '.env*' ! -name '.env.example')"
+      - name: Guardar o artefato
+        # O mesmo pacote que o "vercel deploy --prebuilt" envia, com o commit no nome.
+        id: artefato
+        uses: actions/upload-artifact@v7
+        with:
+          name: artefato-api-${{ github.sha }}
+          path: .vercel/output
+          include-hidden-files: true
+          if-no-files-found: error
       - name: Publicar
         id: publicar
+        env:
+          URL_ARTEFATO: ${{ steps.artefato.outputs.artifact-url }}
         run: |
           url="$(vercel deploy --prebuilt --prod)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Artefato da API: $URL_ARTEFATO" >> "$GITHUB_STEP_SUMMARY"
           echo "Deploy da API: $url" >> "$GITHUB_STEP_SUMMARY"
       - name: Conferir a API publicada
         run: |
@@ -151,11 +169,25 @@ jobs:
         run: vercel pull --yes --environment=production
       - name: Build de produção
         run: vercel build --prod
+      - name: Conferir o artefato
+        run: |
+          test -z "$(find .vercel/output -name '.env*' ! -name '.env.example')"
+      - name: Guardar o artefato
+        id: artefato
+        uses: actions/upload-artifact@v7
+        with:
+          name: artefato-site-${{ github.sha }}
+          path: .vercel/output
+          include-hidden-files: true
+          if-no-files-found: error
       - name: Publicar
         id: publicar
+        env:
+          URL_ARTEFATO: ${{ steps.artefato.outputs.artifact-url }}
         run: |
           url="$(vercel deploy --prebuilt --prod)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Artefato do site: $URL_ARTEFATO" >> "$GITHUB_STEP_SUMMARY"
           echo "Deploy do site: $url" >> "$GITHUB_STEP_SUMMARY"
       - name: Conferir o site publicado
         run: |
