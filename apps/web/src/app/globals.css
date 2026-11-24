@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf7f2;
+  --foreground: #1c1917;
+  --muted: #6f6760;
+  --card: #ffffff;
+  --border: #e7dfd4;
+  --accent: #b42318;
+  --accent-hover: #912018;
+  --accent-foreground: #ffffff;
+  --accent-soft: #fdeeec;
+  --success-soft: #ecf7ef;
+  --success: #1f7a3d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #14110f;
+    --foreground: #f5f0ea;
+    --muted: #a8a09a;
+    --card: #1e1a17;
+    --border: #352f2a;
+    --accent: #f0533f;
+    --accent-hover: #f47462;
+    --accent-foreground: #1a0705;
+    --accent-soft: #3a1915;
+    --success-soft: #13291b;
+    --success: #6fd08f;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@keyframes revelar {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animar-revelacao {
+  animation: revelar 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-revelacao {
+    animation: none;
+  }
 }
