@@ -168,6 +168,10 @@ jobs:
       - name: Baixar a configuração de produção
         run: vercel pull --yes --environment=production
       - name: Build de produção
+        # Endereço público para a prévia do link (og:image e og:url) das
+        # páginas geradas no build. Sem ele, elas apontariam para localhost.
+        env:
+          SITE_URL: ${{ env.URL_SITE }}
         run: vercel build --prod
       - name: Conferir o artefato
         run: |
@@ -191,7 +195,10 @@ jobs:
           echo "Deploy do site: $url" >> "$GITHUB_STEP_SUMMARY"
       - name: Conferir o site publicado
         run: |
-          # A página inicial abre e o site alcança a API pelo /api.
-          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/" | grep -q "Amigo Secreto"
+          # A página inicial abre, com a prévia do link apontando para o
+          # endereço de produção, e o site alcança a API pelo /api.
+          inicio="$(curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/")"
+          grep -q "Amigo Secreto" <<< "$inicio"
+          grep -q "property=\"og:image\" content=\"$URL_SITE/" <<< "$inicio"
           curl -fsS --retry 10 --retry-delay 6 --retry-all-errors "$URL_SITE/api/health" | grep -q '"status":"ok"'
           echo "Site no ar: $URL_SITE" >> "$GITHUB_STEP_SUMMARY"
