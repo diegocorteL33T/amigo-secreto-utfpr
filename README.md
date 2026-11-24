@@ -65,6 +65,7 @@ Para rodar localmente, nenhuma variável é obrigatória. Os modelos estão em `
 | `SORTEIO_SECRET` | API | Chave que lacra os links. Mínimo de 16 caracteres. | Fora de produção, usa uma chave local e avisa no terminal. Em produção, a API não sobe sem ela. |
 | `PORT` | API | Porta da API. | `3001` |
 | `API_URL` | Site | Endereço da API para onde o Next.js repassa `/api/...`. | `http://localhost:3001` |
+| `SITE_URL` | Site | Endereço público do site, usado na prévia do link (`og:image` e `og:url`). Em produção, a pipeline passa este valor no build. | Na Vercel, o endereço de produção; fora dela, `http://localhost:3000` |
 
 O Next.js lê sozinho o arquivo `apps/web/.env.local`, se você criar um a partir do modelo. A API lê as variáveis do ambiente do terminal. Em produção, as duas ficam na Vercel.
 
@@ -120,7 +121,7 @@ Cada job só começa se o anterior passou. Se um falha, os seguintes ficam como 
 - **Só a `main` publica.** O deploy roda em push na `main` ou numa execução manual. Na `develop` e nos PRs, a pipeline só valida.
 - **Aprovação humana no PR.** O código só chega à `main` por PR revisado pelo outro membro da equipe.
 - **Artefato.** Em cada deploy, a pipeline monta o pacote de produção com a CLI da Vercel (`vercel pull` e `vercel build`) e confere que nenhum arquivo `.env` entrou nele. Depois, guarda o pacote como artefato da execução, com o commit no nome (`artefato-api-<commit>` e `artefato-site-<commit>`), e publica esse mesmo pacote com `vercel deploy --prebuilt --prod`.
-- **Conferência.** Depois de publicar, a pipeline acessa o endereço de produção: na API, `/health`; no site, a página inicial e o `/api/health`, que passa pelo site até a API. Se algum não responder, a execução falha.
+- **Conferência.** Depois de publicar, a pipeline acessa o endereço de produção: na API, `/health`; no site, a página inicial (com a prévia do link apontando para o endereço de produção) e o `/api/health`, que passa pelo site até a API. Se algum não responder, a execução falha.
 - **Só a pipeline publica.** O deploy automático da Vercel está desligado nos `vercel.json`.
 
 Na entrega contínua, a versão validada fica pronta e alguém decide quando publicar. Na implantação contínua, ela é publicada sozinha depois das verificações. Aqui, a decisão humana é a aprovação do PR para a `main`; depois do merge, a publicação é automática.
