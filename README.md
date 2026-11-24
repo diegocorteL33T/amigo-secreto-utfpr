@@ -6,6 +6,12 @@ Quem organiza cria o grupo, o app faz o sorteio e gera um link para cada partici
 
 **Site publicado:** _o link entra aqui depois do primeiro deploy na `main`._
 
+## O problema
+
+No sorteio com papeizinhos, todo mundo precisa estar no mesmo lugar, alguém pode tirar o próprio nome e é difícil respeitar regras como "casais não se tiram". Quando o grupo está espalhado, alguém acaba sorteando por todos e fica sabendo do resultado.
+
+O app faz o sorteio pela internet, respeita as restrições e garante que ninguém tire a si mesmo. Cada pessoa recebe um link que mostra só o amigo secreto dela, e a tela de quem organiza mostra os links, não os pares sorteados.
+
 ## Funcionalidades
 
 - **Criar o sorteio:** nome do grupo, de 3 a 100 participantes, valor sugerido e data da troca (opcionais) e restrições do tipo "estas duas pessoas não podem se tirar".
@@ -105,9 +111,21 @@ O arquivo `.github/workflows/ci.yml` roda a cada push e pull request para `main`
 1. **Qualidade:** `npm run lint` e `npm run typecheck`.
 2. **Testes:** `npm test` e `npm run test:e2e`.
 3. **Build:** `npm run build`.
-4. **Deploy da API**, depois **deploy do site**, na Vercel. Depois de cada deploy, a pipeline acessa o endereço de produção: na API, `/health`; no site, a página inicial e o `/api/health`, que passa pelo site até a API. Se algum não responder, a execução falha.
+4. **Deploy da API**, depois **deploy do site**, na Vercel (veja "Entrega e publicação").
 
-Cada job só começa se o anterior passou. Se um falha, os seguintes ficam como *skipped* e nada é publicado. O deploy só roda na `main` (push ou execução manual) e é feito pela CLI da Vercel (`vercel pull`, `vercel build` e `vercel deploy --prebuilt --prod`). O deploy automático da Vercel está desligado nos `vercel.json`, então só a pipeline publica.
+Cada job só começa se o anterior passou. Se um falha, os seguintes ficam como *skipped* e nada é publicado.
+
+## Entrega e publicação
+
+- **Só a `main` publica.** O deploy roda em push na `main` ou numa execução manual. Na `develop` e nos PRs, a pipeline só valida.
+- **Aprovação humana no PR.** O código só chega à `main` por PR revisado pelo outro membro da equipe.
+- **Artefato.** Em cada deploy, a pipeline monta o pacote de produção com a CLI da Vercel (`vercel pull` e `vercel build`) e confere que nenhum arquivo `.env` entrou nele. Depois, guarda o pacote como artefato da execução, com o commit no nome (`artefato-api-<commit>` e `artefato-site-<commit>`), e publica esse mesmo pacote com `vercel deploy --prebuilt --prod`.
+- **Conferência.** Depois de publicar, a pipeline acessa o endereço de produção: na API, `/health`; no site, a página inicial e o `/api/health`, que passa pelo site até a API. Se algum não responder, a execução falha.
+- **Só a pipeline publica.** O deploy automático da Vercel está desligado nos `vercel.json`.
+
+Na entrega contínua, a versão validada fica pronta e alguém decide quando publicar. Na implantação contínua, ela é publicada sozinha depois das verificações. Aqui, a decisão humana é a aprovação do PR para a `main`; depois do merge, a publicação é automática.
+
+Para saber que código está no ar, abra a última execução da `main` em **Actions**: o resumo mostra o commit, o link do artefato e o endereço publicado.
 
 Os segredos ficam no GitHub (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API` e `VERCEL_PROJECT_ID_WEB`) e as variáveis da aplicação ficam na Vercel. Nenhum deles fica no código.
 
@@ -117,6 +135,16 @@ Os segredos ficam no GitHub (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID
 - `develop`: integração.
 - Branches de trabalho saem da `develop` e voltam para ela, com o nome `tipo/descricao` (por exemplo `ci/pipeline` e `docs/readme`).
 - Os commits seguem o padrão *Conventional Commits*, em português: `tipo(escopo): descricao`.
+
+## Limitações conhecidas
+
+- **Nada fica salvo.** Não há banco de dados nem conta de usuário. Se quem organiza recarregar a página antes de enviar os links, eles se perdem e é preciso sortear de novo. A marcação de "enviado" também some.
+- **Quem tem o link vê o resultado.** O link é a única chave: quem receber o link de outra pessoa vê quem ela tirou.
+- **Não dá para cancelar um link.** Um link vale enquanto a chave `SORTEIO_SECRET` for a mesma. Trocar a chave invalida todos os links já enviados, de todos os sorteios.
+- **Envio manual.** O app não manda os links sozinho: quem organiza copia cada link ou abre o WhatsApp.
+- **Tamanho do grupo:** de 3 a 100 participantes por sorteio.
+- **O site não tem testes automatizados.** Os testes cobrem a API. O site passa por lint, typecheck, build e pela conferência do endereço publicado.
+- **Sem WebGL**, a caixa de presente aparece numa versão simples em CSS e o fundo fica liso.
 
 ## Equipe
 
