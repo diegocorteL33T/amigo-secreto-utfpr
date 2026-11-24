@@ -159,3 +159,8 @@ vite.config.ts.timestamp-*
 # Vercel CLI
 .vercel
 
+
+# Ferramentas de design (dados locais)
+.taste-skill/
+.impeccable/
+qa/
