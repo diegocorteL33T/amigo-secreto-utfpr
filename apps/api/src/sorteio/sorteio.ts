@@ -100,8 +100,8 @@ function montarProibicoes(
     return indice;
   };
 
-  // Ninguém pode tirar a si mesmo.
-  const proibidos = nomes.map((_, i) => new Set<number>([i]));
+  // Começa sem proibições; as restrições do grupo entram abaixo.
+  const proibidos = nomes.map(() => new Set<number>());
 
   for (const [a, b] of restricoes) {
     const ia = indiceDe(a);
