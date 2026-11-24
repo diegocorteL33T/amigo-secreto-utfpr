@@ -1,0 +1,22 @@
+{
+  "name": "amigo-secreto-utfpr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sorteador de Amigo Secreto com pipeline de CI/CD (Next.js + NestJS + TypeScript)",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "npm run start:dev --workspace api",
+    "dev:web": "npm run dev --workspace web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace api",
+    "test:e2e": "npm run test:e2e --workspace api",
+    "build": "npm run build --workspaces --if-present"
+  }
+}
