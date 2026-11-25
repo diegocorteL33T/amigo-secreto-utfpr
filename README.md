@@ -6,7 +6,9 @@ Quem organiza cria o grupo, o app faz o sorteio e gera um link para cada partici
 
 **Site publicado:** https://amigo-secreto-utfpr.vercel.app (API em https://amigo-secreto-utfpr-api.vercel.app/health)
 
-<img width="1440" height="900" alt="r1-revelar-1440-fechado" src="https://github.com/user-attachments/assets/23c35425-e314-442d-9b83-8fc5faf535c4" />
+**Vídeo de apresentação** (22 s, com som):
+
+https://github.com/user-attachments/assets/c6718a91-1fd6-4def-adb8-3f834dab45e6
 
 ## O problema
 
@@ -22,12 +24,29 @@ O app faz o sorteio pela internet, respeita as restrições e garante que ningu�
 - **Enviar os links:** copiar o link ou mandar direto pelo WhatsApp, com marcação de quem já recebeu.
 - **Revelar:** a pessoa abre o link e vê quem tirou, com uma caixa de presente em 3D (Three.js). As animações podem ser pausadas e ficam paradas quando o sistema pede menos movimento.
 
+## Telas
+
+Capturas do site em 1440 px (computador) e 375 px (celular).
+
+| Criar o sorteio | Links de cada pessoa |
+| --- | --- |
+| <img src="docs/telas/criar-1440.png" alt="Tela de criar o sorteio: nome do grupo, participantes e restrições, ao lado da caixa de presente em 3D" width="420"> | <img src="docs/telas/resultado-1440.png" alt="Sorteio feito: um link por pessoa, com os botões Copiar link e Enviar no WhatsApp" width="420"> |
+| **Revelação fechada** | **Revelação aberta** |
+| <img src="docs/telas/revelacao-fechada-1440.png" alt="Página de revelação com a caixa de presente fechada e a saudação Olá, Ana" width="420"> | <img src="docs/telas/revelacao-aberta-1440.png" alt="Caixa de presente aberta com confete e o nome sorteado, Davi" width="420"> |
+
+<p>
+  <img src="docs/telas/resultado-375.png" alt="Celular: tela do sorteio feito" width="250">
+  <img src="docs/telas/revelacao-fechada-375.png" alt="Celular: revelação com a caixa fechada e o botão Abrir o presente" width="250">
+  <img src="docs/telas/revelacao-aberta-375.png" alt="Celular: caixa aberta mostrando quem a pessoa tirou" width="250">
+</p>
+
 ## Estrutura
 
 ```
 apps/
   api/                      API em NestJS: sorteio, lacre dos links e testes
   web/                      site em Next.js: telas de criar e de revelar
+docs/telas/                 capturas de tela usadas neste README
 .github/workflows/ci.yml    pipeline de CI/CD (GitHub Actions)
 ```
 
