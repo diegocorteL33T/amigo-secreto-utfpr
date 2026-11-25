@@ -47,6 +47,7 @@ apps/
   api/                      API em NestJS: sorteio, lacre dos links e testes
   web/                      site em Next.js: telas de criar e de revelar
 docs/telas/                 capturas de tela usadas neste README
+docs/evidencias/            prints das execuções usados no documento técnico
 .github/workflows/ci.yml    pipeline de CI/CD (GitHub Actions)
 ```
 
